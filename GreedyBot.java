@@ -13,6 +13,7 @@ public class GreedyBot implements RoShamBot {
     private int scissorsCount;
     private int lizardCount;
     private int spockCount;
+    private int Count;
     private Random random;
 
     public GreedyBot() {
@@ -22,6 +23,7 @@ public class GreedyBot implements RoShamBot {
         this.scissorsCount = 0;
         this.lizardCount = 0;
         this.spockCount = 0;
+        this.Count = 0;
         this.random = new Random();
     }
 
@@ -49,6 +51,8 @@ public class GreedyBot implements RoShamBot {
     }
 
     private void updateCounts(Action lastOpponentMove) {
+        Count++;
+
         switch (lastOpponentMove) {
             case ROCK:
                 rockCount++;
@@ -69,6 +73,15 @@ public class GreedyBot implements RoShamBot {
     }
 
     private Action getGreedyAction() {
+        int probRock = rockCount/ Count;
+        int probScissor = scissorsCount/ Count;
+        int probPaper = paperCount/ Count;
+        int probSpock = spockCount/ Count;
+        int probLizard = lizardCount/ Count;
+
+        
+
+
         if (rockCount <= paperCount && rockCount <= scissorsCount
                 && rockCount <= lizardCount && rockCount <= spockCount) {
             return Action.ROCK;

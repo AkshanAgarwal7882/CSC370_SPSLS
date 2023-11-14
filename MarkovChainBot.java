@@ -1,11 +1,14 @@
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class MarkovChainBot implements RoShamBot {
     private double decay;
-    private Map<Action, Map<Action, Observation>> matrix;
-    private Action lastMove;
+    private Map<List<Action>, Map<Action, Observation>> matrix;
+    private List<Action> lastMove;
 
     public MarkovChainBot(int order, double decay) {
         this.decay = decay;
@@ -13,23 +16,46 @@ public class MarkovChainBot implements RoShamBot {
         this.lastMove = null;
     }
 
-    // creates the intiial probablity matrix for the Markov Chain
+    private Map<List<Action>, Map<Action, Observation>> createMatrix(int order) {
+        Map<List<Action>, Map<Action, Observation>> matrix = new HashMap<>();
 
-    private Map<Action, Map<Action, Observation>> createMatrix(int order) {
-        Map<Action, Map<Action, Observation>> matrix = new HashMap<>();
+        List<List<Action>> keys = createKeys(order);
 
-        for (Action outerAction : Action.values()) {
+        for (List<Action> key : keys) {
             Map<Action, Observation> innerMap = new HashMap<>();
             for (Action innerAction : Action.values()) {
                 innerMap.put(innerAction, new Observation(1.0 / Action.values().length, 0));
             }
-            matrix.put(outerAction, innerMap);
+            matrix.put(key, innerMap);
         }
 
         return matrix;
     }
 
-    public void updateMatrix(Action pair, Action input) {
+    private List<List<Action>> createKeys(int order) {
+        List<List<Action>> keys = new ArrayList<>();
+    
+        if (order > 0) {
+            generateKeys(order, new ArrayList<>(), keys);
+        }
+    
+        return keys;
+    }
+    
+    private void generateKeys(int remaining, List<Action> currentKey, List<List<Action>> keys) {
+        if (remaining == 0) {
+            keys.add(new ArrayList<>(currentKey));
+            return;
+        }
+    
+        for (Action action : Action.values()) {
+            currentKey.add(action);
+            generateKeys(remaining - 1, currentKey, keys);
+            currentKey.remove(currentKey.size() - 1);
+        }
+    }
+
+    public void updateMatrix(List<Action> pair, Action input) {
         if (lastMove != null) {
             for (Map.Entry<Action, Observation> entry : matrix.get(lastMove).entrySet()) {
                 entry.getValue().nObs = decay * entry.getValue().nObs;
@@ -63,6 +89,7 @@ public class MarkovChainBot implements RoShamBot {
         }
     }
 
+    @Override
     public Action getNextMove(Action lastOpponentMove) {
         if (lastOpponentMove != null) {
             updateMatrix(lastMove, lastOpponentMove);
