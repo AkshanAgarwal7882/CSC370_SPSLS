@@ -4,13 +4,16 @@ import java.util.AbstractMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import java.util.*;
+
 
 public class MarkovChainBot implements RoShamBot {
-    private double decay;
-    private Map<List<Action>, Map<Action, Observation>> matrix;
+    private double decay = 0.7; // gives the decay factor for the Markovnikov Chain
+    private int order = 10;// Determines he number of moves to look at
+    private Map<List<Action>, Map<Action, Observation>> matrix; // The Markonikov chain matrix
     private List<Action> lastMove;
 
-    public MarkovChainBot(int order, double decay) {
+    public MarkovChainBot() {
         this.decay = decay;
         this.matrix = createMatrix(order);
         this.lastMove = null;
@@ -70,10 +73,26 @@ public class MarkovChainBot implements RoShamBot {
         }
         lastMove = pair;
     }
+    private Action[] getDefeats(Action action) {
+        switch (action) {
+            case ROCK:
+                return new Action[]{Action.PAPER, Action.SPOCK};
+            case PAPER:
+                return new Action[]{Action.SCISSORS, Action.LIZARD};
+            case SCISSORS:
+                return new Action[]{Action.ROCK, Action.SPOCK};
+            case LIZARD:
+                return new Action[]{Action.ROCK, Action.SCISSORS};
+            case SPOCK:
+                return new Action[]{Action.PAPER, Action.LIZARD};
+            default:
+                throw new IllegalArgumentException("Invalid action: " + action);
+        }
+    }
 
     public Action predict() {
         if (lastMove == null) {
-            return Action.values()[new Random().nextInt(Action.values().length)];
+            return null;
         }
 
         Map<Action, Observation> probs = matrix.get(lastMove);
@@ -95,7 +114,15 @@ public class MarkovChainBot implements RoShamBot {
             updateMatrix(lastMove, lastOpponentMove);
         }
 
-        return predict();
+        Action predictedMove =  predict();
+        if(predictedMove == null){
+        return Action.values()[new Random().nextInt(Action.values().length)];
+        }
+
+        Action[] winningOutcomes = getDefeats(predictedMove);
+        return winningOutcomes[new Random().nextInt(2)];
+
+        // return predictedMove;
     }
 
     private static class Observation {
