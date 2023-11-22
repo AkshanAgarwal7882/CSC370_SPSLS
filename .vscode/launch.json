@@ -9,7 +9,7 @@
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}",
-            "args": ["NashBot", "HistoryMatchingBot", 10000]
+            "args": ["SolidAsARockBot", "SwitchBot", 5000]
         },
         {
             "type": "java",
